@@ -41,10 +41,20 @@
 (defvar *language-registry*
   (make-hash-table))
 
+(defun remove-first-substring (string substring)
+  "Remove the first instance of SUBSTRING from STRING."
+  (let ((pos (search substring string :test #'char-equal)))
+    (if pos
+        (concatenate 'string
+                     (subseq string 0 pos)
+                     (subseq string (+ pos (length substring)))) 
+        string))) ; If the substring is not found, return the original string
+
 (defmacro register-language (name lib &key fn-name)
   (check-type name symbol)
   (check-type fn-name (or null string))
-  (let ((fn-name (or fn-name (substitute #\_ #\- (pathname-name lib))))
+  (let ((fn-name (or fn-name (remove-first-substring 
+                              (remove-first-substring (substitute #\_ #\- (pathname-name lib)) "lib") ".so")))
         (cffi-name (make-symbol (symbol-name name))))
     `(progn
        (define-foreign-library ,cffi-name
@@ -53,7 +63,7 @@
        (setf (gethash ',name *language-registry*)
              (lambda ()
                (foreign-funcall ,fn-name ts-language)))
-       ',name)))
+       ',name))) 
 
 (defun language-module (name)
   (funcall
