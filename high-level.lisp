@@ -51,6 +51,7 @@
         string))) ; If the substring is not found, return the original string
 
 (defmacro register-language (name lib &key fn-name)
+  ; Need to check and see if .so extension is added to lib, if so then remove it
   (check-type name symbol)
   (check-type fn-name (or null string))
   (let ((fn-name (or fn-name (remove-first-substring 
